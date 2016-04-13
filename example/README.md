@@ -268,7 +268,7 @@ change the settings while running to point to this instance of RackHD at
 
 * create the vagrant demo setup and update code to the latest version
 
-`vagrant ssh`:
+`vagrant ssh dev`:
 
     cd ~/src
     ./scripts/clean_all.bash && ./scripts/reset_submodules.bash && ./scripts/link_install_locally.bash
@@ -277,7 +277,7 @@ change the settings while running to point to this instance of RackHD at
 
 * log in to the same VM with another shell and start the tests
 
-`vagrant ssh`:
+`vagrant ssh dev`:
 
     cd ~/src/test
     virtualenv .venv
@@ -288,3 +288,24 @@ change the settings while running to point to this instance of RackHD at
 * start a PXE booting VM on the `closednet` to trigger the tests to complete
 
     VBoxManage startvm pxe-1 --type gui
+
+
+## vBMC Quanta d51
+
+Set up a SKUpack for the virtual Quanta D51:
+
+    cd ~/src/rackhd/example
+    # make sure you're in the example directory to reference the sample JSON correctly
+
+    curl -H "Content-Type: application/json" \
+    -X PUT --data @samples/vQuanta_install_coreos.json \
+    http://localhost:9090/api/1.1/workflows
+
+    curl -H "Content-Type: application/json" \
+    -X POST --data @samples/vQuanta_d51_sku.json \
+    http://localhost:9090/api/1.1/skus
+
+`vagrant up quanta_d51`:
+
+You can see the Quanta d51 control with the vBMC quanta simulator by using VNC
+to connect to 127.0.0.1:15901 (or 127.0.0.1 display 10001)

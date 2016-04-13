@@ -8,7 +8,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     # RackHD SERVER
     config.vm.define "dev" do |target|
-        target.vm.box = "rackhd/rackhd"
+        target.vm.box = "heckj/rackhd"
         target.vm.provider "virtualbox" do |v|
             v.memory = 4096
             v.cpus = 4
@@ -82,14 +82,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             v.cpus = 4
             v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all", "--ioapic", "on"]
         end
+        #target.vm.network :public_network
         target.vm.network "private_network", virtualbox__intnet: "closednet", auto_config: false, nic_type: "82540EM"
         target.vm.provision "shell", inline: <<-SHELL
             sudo ifconfig eth1 up
             sleep 2
             sudo udhcpc -i br1
         SHELL
-        # VNC access to QEMU instance in quanta_d51
-        target.vm.network "forwarded_port", guest: 5901, host: 15901
     end
 
 
