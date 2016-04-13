@@ -19,7 +19,10 @@
         },
         {
             "label": "install-coreos",
-            "taskName": "Task.Os.Install.CoreOS"
+            "taskName": "Task.Os.Install.CoreOS",
+            "waitOn": {
+                "create-ipmi-obm-settings": "succeeded"
+            }
         }
     ]
 }
