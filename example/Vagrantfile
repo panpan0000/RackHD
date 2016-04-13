@@ -28,7 +28,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         # REPO is optional when WORKSPACE is defined, used for synchronizing single RackHD repos
         # otherwise it assumes all service repos have been cloned and built under the WORKSPACE path.
         if ENV['WORKSPACE']
-	  if ENV['REPO'] == "on-tasks"
+          if ENV['REPO'] == "on-tasks"
             target.vm.synced_folder "#{ENV['WORKSPACE']}/#{ENV['REPO']}", "/home/vagrant/src/on-taskgraph/node_modules/on-tasks/"
             target.vm.synced_folder "#{ENV['WORKSPACE']}/#{ENV['REPO']}", "/home/vagrant/src/on-http/node_modules/on-tasks/"
           elsif ENV['REPO'] == "on-core"
@@ -78,7 +78,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         target.vm.box = "InfraSIM/quanta_d51"
         target.vm.provider "virtualbox" do |v|
             v.gui = true
-            v.memory = 1024
+            v.memory = 2048
             v.cpus = 4
             v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all", "--ioapic", "on"]
         end
@@ -88,6 +88,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             sleep 2
             sudo udhcpc -i br1
         SHELL
+        # VNC access to QEMU instance in quanta_d51
+        target.vm.network "forwarded_port", guest: 5901, host: 15901
     end
 
 
