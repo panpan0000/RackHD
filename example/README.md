@@ -305,7 +305,9 @@ Set up a SKUpack for the virtual Quanta D51:
     -X POST --data @samples/vQuanta_d51_sku.json \
     http://localhost:9090/api/1.1/skus
 
-`vagrant up quanta_d51`:
+Start up the virtual Quanta
+
+    vagrant up quanta_d51
 
 You can see the Quanta d51 control with the vBMC quanta simulator by using VNC
 to connect to 127.0.0.1:15901 (or 127.0.0.1 display 10001)

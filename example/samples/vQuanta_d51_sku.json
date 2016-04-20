@@ -1,5 +1,5 @@
 {
-    "name": "Noop OBM settings for VirtualBox nodes",
+    "name": "vQuanta D51 SKU",
     "discoveryGraphName": "Graph.DefaultVQuanta.InstallCoreOS",
     "discoveryGraphOptions": {},
     "rules": [
