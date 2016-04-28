@@ -1,6 +1,6 @@
 {
     "name": "vQuanta D51 SKU",
-    "discoveryGraphName": "Graph.DefaultVQuanta.InstallCoreOS",
+    "discoveryGraphName": "Graph.DefaultVQuanta.InstallCentOS",
     "discoveryGraphOptions": {},
     "rules": [
         {

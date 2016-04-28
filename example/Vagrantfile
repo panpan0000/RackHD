@@ -16,7 +16,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         end
 
         # NOTE: virtualbox shared folder syncing can be quite slow, but shared folders
-        # can be configured as NFS mounts to the host instead. 
+        # can be configured as NFS mounts to the host instead.
         # To do so, append: `, type: "nfs"` to all of the target.vm.synced_folder commands
         # below, then on the host system, run `sudo nfsd start`.
         # Additionally, uncomment the below configuration:
@@ -78,7 +78,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         target.vm.box = "InfraSIM/quanta_d51"
         target.vm.provider "virtualbox" do |v|
             v.gui = true
-            v.memory = 2048
+            v.memory = 4096
             v.cpus = 4
             v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all", "--ioapic", "on"]
         end
