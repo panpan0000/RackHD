@@ -1,0 +1,53 @@
+---
+- file: path="{{ http_static_directory }}/common" state=directory
+        owner="{{ ansible_env.USER }}" mode=0755
+  sudo: yes
+
+- file: path="{{ tftp_static_directory }}" state=directory
+        owner="{{ ansible_env.USER }}" mode=0755
+  sudo: yes
+
+- name: Update git repos with latest
+  shell: git fetch --all --prune
+  args:
+    chdir: "{{ ansible_env.HOME }}/src/on-imagebuilder"
+
+- name: Reset to the branch specified
+  shell: git reset --hard {{ branch }}
+  when: branch is defined
+  args:
+    chdir: "{{ ansible_env.HOME }}/src/on-imagebuilder"
+
+- name: Clean the on-imagebuilder artifact folder 
+  shell: rm /tmp/on-imagebuilder -rf
+  sudo:  yes
+
+- name: Build the overlay FS artifacts(kernel/overlay/iPXE/syslinux)
+  shell:  ./build_all.sh
+  args:
+    chdir: "{{ ansible_env.HOME }}/src/on-imagebuilder"
+  sudo: yes
+
+- name: moving microkernel and overlays files to http static folder
+  fetch: src= /tmp/on-imagebuilder/builds/{{ item }}
+         dest="{{ http_static_directory }}/common/{{ item }}"     fail_on_missing=yes
+  with_items:
+  - base.*.squashfs.img
+  - discovery.overlay.cpio.gz
+  - initrd.img-*
+  - vmlinuz-*
+
+- name: moving  bootloaders to tftp static folder
+  fetch:   src= /tmp/on-imagebuilder/ipxe/{{ item }}
+           dest="{{ tftp_static_directory }}{{ item }}"     fail_on_missing=yes
+  with_items:
+   - monorail.ipxe
+   - monorail-undionly.kpxe
+   - monorail-efi32-snponly.efi
+   - monorail-efi64-snponly.efi
+
+- name: retrieve the latest syslinux bootloader from bintray
+   fetch:   src= /tmp/on-imagebuilder/syslinux/{{ item }}
+            dest="{{ tftp_static_directory }}/{{ item }}"   fail_on_missing=yes
+  with_items:
+   - undionly.kkpxe
