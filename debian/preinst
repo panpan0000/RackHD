@@ -1,0 +1,147 @@
+#!/bin/sh
+
+# Copyright 2015, EMC, Inc.
+
+set -e
+
+########################################################################################################
+#
+# 1.NOTE:  ** MUST READ **
+#
+#   Before using this script, please read the short "Prerequisites" session about nic setup in:  http://rackhd.readthedocs.io/en/latest/rackhd/ubuntu_package_installation.html
+#
+# 2.Usage:
+#
+#  run in Linux shell : wget -qO- https://raw.githubusercontent.com/RackHD/RackHD/one-key-quick-install/example/install_rackhd.sh | sudo bash
+#
+#  Then following the prompt, input the nic name for as RackHD's control network port.
+#  the whole progress will take 20~30 minutes, depends on your network condition and machine performance.
+#
+#
+#
+# 3.What Does This Script Do:
+#
+#  (1) Get control nic port from user input via stdin
+#  (2) Check the nic name. force set to 172.31.128.1 to eth1 , with user agreement via typing 'yes' on stdin
+#  (3) inspect the NodeJS version, upgrade to NodeJS 4.x if older
+#  (4) install some debian-packages as RackHD prerequisite
+#  (5) install RackHD debian packages
+#  (6) Update DHCP configuration in /etc/dhcp/dhcpd.conf, to enable RackHD as DHCP server on eth1 for 172.31.128.x IP range
+#  (7) create some dummy file under /etc/default/, to let upstart works well
+#  (8) create RackHD config file
+#  (9) Copy images/binaries from bintray to static folder on RackHD application
+#  (10) start RackHD services
+#
+#
+#
+# 4.Reference:
+#
+#  this script is based on RackHD document "Ubuntu Package Based Installation"
+#  http://rackhd.readthedocs.io/en/latest/rackhd/ubuntu_package_installation.html 
+#
+#########################################################################################################
+
+
+#############################################
+#  Check if you have 2 NIC as below:
+#  eth0 for the public network - providing access to RackHD APIs, and providing routed (layer3) access to out of band network for machines under management
+#  eth1 for dhcp/pxe to boot/configure the machines. and IP configurated as static ( 172.31.128.0/22 )
+#
+#
+# Parameter #1 ($1) is the NIC name of the control port for RacKHD
+#
+#############################################
+
+check_NIC(){
+    NIC_Name=$1
+    echo $NIC_Name
+
+    if [[ "$NIC_Name" -ne "eth1" ]]; then
+        echo "[WARNING] RackHD takes the control NIC port as eth1 by default , with IP 172.31.128.0/22. RackHD may not function well if you left all config as default ! "
+        sleep 2
+    fi
+    NIC_IP=$( ifconfig $NIC_Name | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}' )
+
+    if [[ ! "$NIC_IP" == '172.31.128.1' ]]; then
+	echo -n "Do you want this script to force set your $NIC_Name IP to 172.31.128.1 ? (type \"yes\" to force set, others to abort) > "
+	read willing_to_force_ip
+	if  [[ "$willing_to_force_ip" == 'yes' ]]; then
+		sudo echo "\
+		auto $NIC_Name
+		iface eth1 inet static
+		address 172.31.128.1
+		netmask 255.255.252.0" >> /etc/network/interfaces
+		echo "[INFO] will restart your $NIC_Name..."
+		ifdown $NIC_Name
+		ifup $NIC_Name
+		New_IP= $( ifconfig $NIC_Name | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}' )
+		echo "Your $NIC_Name new IP address is $New_IP"
+	else
+	        echo "[Error] default RackHD configure files takes eth1 with IP 172.31.128.1 as control NIC port.RackHD may not function well if you left all config as default !"
+	        exit -4
+	fi
+    fi
+}
+
+#############################################
+#  Check NodeJS is greater than 4.x
+#
+#############################################
+check_install_nodejs(){
+
+    do_install=true;
+
+    if type -p nodejs; then
+        # Node JS being installed
+        NODEJS_VER=$(nodejs --version | sed s/v//)
+        if [[ "$NODEJS_VER" < "4.0" ]] ; then
+            # Remove Old NodeJS
+            echo "[INFO] removing old version [$NODEJS_VER] of NodeJS..."
+            sudo apt-get -y remove nodeijs nodejs-legacy
+            do_install=true;
+        else
+            do_install=false;
+        fi
+    else
+        do_install=true;
+    fi
+
+
+    if [[ $do_install = true  ]]; then
+            echo "[INFO] Your NodeJS has not been installed or too old, install NodeJS 4.x first...."
+            # Install NodeJS 4.x =========== Starts ============
+            curl --silent https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-key add -
+            VERSION=node_4.x
+            DISTRO="$(lsb_release -s -c)"
+            echo "deb https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+            echo "deb-src https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee -a /etc/apt/sources.list.d/nodesource.list
+
+            sudo apt-get update
+            sudo apt-get -y install nodejs
+            # Install NodeJS 4.x =========== Ends ============
+    fi
+    # Double Check ========
+    if  ! type -p nodejs; then
+        return -1;
+    fi
+    NODEJS_VER=$(nodejs --version | sed s/v//);
+    if [[  "$NODEJS_VER" < "4.0" ]] ; then
+        return -2;
+    fi
+        
+    return 0
+
+}
+
+
+
+
+
+
+
+
+input_NIC_Name=eth1
+
+check_NIC $input_NIC_Name
+check_install_nodejs
+

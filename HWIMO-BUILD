@@ -1,0 +1,80 @@
+#!/bin/bash
+
+
+dch --create --newversion "1.2.3" --package=rackhd --noquery -p "git log here"
+
+echo "RACKHD_VERSION here" > version
+
+debuild -us -uc -b
+
+
+
+
+exit 0
+'''
+
+# Copyright 2015, EMC, Inc.
+
+if [ -f debian/changelog ]
+then
+  echo "warning: existing debian/changelog, removing it..." 1>&2
+  rm debian/changelog
+fi
+
+GITCOMMITDATE=$(git show -s --pretty="format:%ci")
+DATESTRING=$(date -d "$GITCOMMITDATE" -u +"%Y-%m-%d-%H%M%SZ")
+
+export DEBEMAIL="hwimo robots <hwimo@hwimo.lab.emc.com>"
+export DEBFULLNAME="The HWIMO Robots"
+
+export DEBCHANGE_TZ="UTC"
+export DEBCHANGE_VENDOR="EMC"
+
+export ONRACK_VERSION="$DATESTRING"
+
+if [ -n "$BUILD_NUMBER" ]
+then
+  ONRACK_VERSION="${ONRACK_VERSION}-${BUILD_NUMBER}"
+fi
+
+LOG_MESSAGE=$(git log -1 --oneline)
+
+PKGNAME=$(basename $PWD)
+dch --create --newversion "$ONRACK_VERSION" --package=$PKGNAME --noquery -p "$LOG_MESSAGE"
+
+echo "$ONRACK_VERSION" > version
+
+debuild -us -uc -b 
+
+if [ ! -f debian/files ]
+then
+  echo "ERROR: no files creating during build" 1>&2
+  exit 3;
+fi
+
+for pkg in $(awk '{print $1}' debian/files)
+do
+  pkgfile="../$pkg"
+ 
+  if [ -f "$pkgfile" ]
+  then
+    [ -d pkg ] &&  rm -rf pkg
+    mkdir pkg
+    mv $pkgfile pkg
+    echo "$pkgfile has been copied to $PWD/pkg"
+  fi
+done
+
+
+# Create a virtual environment to use for the
+# packaging, testing and document generation.
+# We need to disable "set -e" here.  sourcing
+# virtualenv files causes early exits
+./mkenv.sh hwimobuild
+set +e
+source myenv_hwimobuild
+set -e
+
+# Run our mkcheck.sh script to determine if code passes standards
+./mkcheck.sh ${ONRACK_VERSION} text hwimobuild
+'''

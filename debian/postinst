@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Copyright 2015, EMC, Inc.
+#############################################
+# Copy the PXE image and micro kernel from bintray 
+#
+#############################################
+copy_RackHD_static_bins(){
+
+    echo "[INFO] Will Copy static files, it will take a while"
+
+    mkdir -p /var/renasar/on-tftp/static/tftp
+    cd /var/renasar/on-tftp/static/tftp
+
+    for file in $(echo "\
+        monorail.ipxe \
+        monorail-undionly.kpxe \
+        monorail-efi64-snponly.efi \
+        monorail-efi32-snponly.efi");do
+    wget "https://dl.bintray.com/rackhd/binary/ipxe/$file"
+    done
+
+    mkdir -p /var/renasar/on-http/static/http/common
+    cd /var/renasar/on-http/static/http/common
+
+    for file in $(echo "\
+        base.trusty.3.16.0-25-generic.squashfs.img \
+        discovery.overlay.cpio.gz \
+        initrd.img-3.16.0-25-generic \
+        vmlinuz-3.16.0-25-generic");do
+    wget "https://dl.bintray.com/rackhd/binary/builds/$file"
+    done
+}
+
+
+
+
+
+
+
+
+REPO=$(apt-cache madison onrack | awk -F\|  '{printf "%s %s\n", $2, $3}' |
+sort -r | head -1 | awk '{print $2}')
+
+BASE=$(basename "$REPO")
+
+RELEASE_FILE=/etc/onrack-release
+if [ -f $RELEASE_FILE ]
+then
+    if grep -q "^RELEASE=" $RELEASE_FILE
+    then
+      sed -i "s/^RELEASE=.*/RELEASE=$BASE/" $RELEASE_FILE
+    else
+      echo "RELEASE=$BASE" >> $RELEASE_FILE
+    fi
+
+    if ! grep -q "^INSTALLATION_ID=" $RELEASE_FILE
+    then
+      UUID=$(cat /proc/sys/kernel/random/uuid)
+      echo "INSTALLATION_ID=$UUID" >> $RELEASE_FILE
+    fi
+else
+    echo "Unable to find $RELEASE_FILE" 1>&2
+    exit 1
+fi
+
+#############################################################
+#
+#
+#  Download static files from bintray
+#
+############################################################
+
+copy_RackHD_static_bins()
+
+
+
+
+
+'''
+
+deb-systemd-helper unmask onrack-init.service >/dev/null || true
+
+## section copied from debhelper boilerplate
+# was-enabled defaults to true, so new installations run enable.
+if deb-systemd-helper --quiet was-enabled onrack-init.service; then
+        # Enables the unit on first installation, creates new
+        # symlinks on upgrades if the unit file has changed.
+        deb-systemd-helper enable onrack-init.service >/dev/null || true
+else
+        # Update the statefile to add new symlinks (if any), which need to be
+        # cleaned up on purge. Also remove old symlinks.
+        deb-systemd-helper update-state onrack-init.service >/dev/null || true
+fi
+if [ -d /run/systemd/system ]; then
+        systemctl --system daemon-reload >/dev/null || true
+        deb-systemd-invoke start onrack-init.service >/dev/null || true
+fi
+## end of copied section
+'''
