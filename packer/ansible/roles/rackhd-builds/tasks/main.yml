@@ -17,6 +17,15 @@
   sudo: yes
   when: (is_release is not undefined) and is_release
 
+- name: Force Apt Get Update
+  shell: apt-get update
+  sudo: yes
+
+- name: Print apt-cache policy rackhd
+  shell: echo $(apt-cache policy rackhd)
+  sudo: yes
+
+
 - name: Install RackHD Packages latest
   include: aptitude_install_rackhd.yml
   vars:
