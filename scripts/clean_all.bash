@@ -12,3 +12,5 @@ for repo in ${REPOS}; do
         rm -rf "${SCRIPT_DIR}/../${repo}/node_modules"
     fi
 done
+
+
