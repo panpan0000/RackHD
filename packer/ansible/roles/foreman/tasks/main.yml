@@ -10,3 +10,4 @@
 - name: Copy foreman Procfile to /home/vagrant/
   copy: src=Procfile dest=/home/vagrant
   sudo: yes
+
