@@ -38,6 +38,7 @@ class Auth(object):
                          + " -o 'StrictHostKeyChecking=no'"
                          + " -o 'UserKnownHostsFile=/dev/null' ")
         term.force_password = True
+        print "Peter Debug: redfish_auth.py ",HOST_IP, " ",SSH_USER," ", SSH_PASSWORD, " ", SSH_PORT
         term.login(HOST_IP, SSH_USER, SSH_PASSWORD, port=SSH_PORT)
         term.sendline(user_add_cmd)
         index = term.expect(['201', '401', '403'], 10)

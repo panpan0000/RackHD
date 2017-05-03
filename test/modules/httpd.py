@@ -61,6 +61,7 @@ def open_ssh_forward(local_port):
                      + " -R " + str(local_port) + ':localhost:' + str(HTTPD_PORT))
 
     session.force_password = True
+    print "PETER DEBUG: USER/PASS/PORT=",SSH_USER, " ", SSH_PASSWORD," " ,SSH_PORT
     session.login(HOST_IP, SSH_USER, SSH_PASSWORD, port=SSH_PORT)
     return session
         
