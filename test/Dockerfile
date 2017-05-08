@@ -17,3 +17,4 @@ ENV RACKHD_PORT ${RACKHD_PORT:-9090}
 ENV RACKHD_AMQP_URL ${RACKHD_AMQP_URL:-amqp://127.0.0.1:5672}
 
 CMD [ "python", "/RackHD/test/run.py" ]
+
