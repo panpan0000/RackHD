@@ -1,0 +1,16 @@
+apps:
+  - script: index.js
+    name: on-taskgraph
+    cwd: ./on-taskgraph
+  - script: index.js
+    name: on-http
+    cwd: ./on-http
+  - script: index.js
+    name: on-dhcp-proxy
+    cwd: ./on-dhcp-proxy
+  - script: index.js
+    name: on-syslog
+    cwd: ./on-syslog
+  - script: index.js
+    name: on-tftp
+    cwd: ./on-tftp
