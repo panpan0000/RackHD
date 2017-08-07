@@ -15,6 +15,6 @@ run:
   args:
   - -exc
   - |
-      ./RackHD/ci/dhcp.sh RackHD/ci RackHD/
+      ./RackHD/ci/smoke-test.sh RackHD/ci RackHD/
 
 
