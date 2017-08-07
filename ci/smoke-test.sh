@@ -14,7 +14,7 @@ clone_build()
         git clone https://github.com/rackhd/${i}.git
         pushd ${i}
         echo "[${i}]: running :  npm install --production"
-        npm install --production &
+        npm install --production --unsafe-perm  &
         # run in background, save its PID into pid_array
         pid_arr[$cnt]=$!
         cnt=$(( $cnt + 1 ))
