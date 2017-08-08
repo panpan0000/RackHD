@@ -15,6 +15,7 @@ run:
   args:
   - -exc
   - |
-      ./RackHD/ci/smoke-test.sh RackHD/ci RackHD/
+      # Note, the other resource will be cloned to ./ workspace
+      ./RackHD/ci/smoke-test.sh ./  RackHD/
 
 

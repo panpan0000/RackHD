@@ -11,7 +11,10 @@ clone_build()
     pushd $1
     #### NPM Install Parallel ######
     for i in ${REPOS[@]}; do
-        git clone https://github.com/rackhd/${i}.git
+        if [ ! -d $i ]; then
+             echo "$i folder doesn't be detected, will clone latest code from github..."
+             git clone https://github.com/rackhd/${i}.git
+        fi
         pushd ${i}
         echo "[${i}]: running :  npm install --production"
         npm install --production --unsafe-perm  &
@@ -134,34 +137,42 @@ whoami
 ls $WORKSPACE
 find $RackHD_Folder/ci
 
+echo $(date)
+
 apt-get update \
 &&   apt-get install -y git \
-&&   apt-get install -y bridge-utils \
+&&   apt-get install -y unzip  #swagger ui
+
+
+echo $(date)
+mkdir -p /opt/monorail
+cp  $RackHD_Folder/ci/monorail/* /opt/monorail/
+
+mkdir -p ${WORKSPACE}
+cp $RackHD_Folder/ci/rackhd.yml ${WORKSPACE}
+clone_build ${WORKSPACE}
+dlHttpFiles ${WORKSPACE}
+dlTftpFiles ${WORKSPACE}
+
+
+apt-get install -y bridge-utils \
 &&   apt-get install -y libnuma-dev \
 &&   apt-get install -y python-pip libpython-dev libssl-dev \
 &&   sudo pip install --upgrade pip \
 &&   sudo pip install setuptools  \
 &&   sudo pip install infrasim-compute
 
-apt-get install -y unzip  #swagger ui
 
+echo $(date)
 pip install virtualenv
 
-mkdir -p /opt/monorail
-cp  ${WORKSPACE}/monorail/* /opt/monorail/
-
-mkdir -p ${WORKSPACE}/src
-cp ${WORKSPACE}/rackhd.yml ${WORKSPACE}/src
-clone_build ${WORKSPACE}/src
-dlHttpFiles ${WORKSPACE}/src
-dlTftpFiles ${WORKSPACE}/src
-
+echo $(date)
 # config InfraSIM
 infrasim init
 infrasim node destroy
 pwd
 ls ${WORKSPACE}
-cp ${WORKSPACE}/infrasim_config.yml  ~/.infrasim/.node_map/default.yml
+cp $RackHD_Folder/ci/infrasim_config.yml  ~/.infrasim/.node_map/default.yml
 
 #######################
 
@@ -188,7 +199,7 @@ service isc-dhcp-server start
 
 pm2 status
 pm2 logs > /var/log/rackhd.log &
-pushd ${WORKSPACE}/src
+pushd ${WORKSPACE}
 pm2 start rackhd.yml
 sleep 15 && infrasim node start &
 dhcpd -f -cf /etc/dhcp/dhcpd.conf -lf /var/lib/dhcp/dhcpd.leases --no-pid &
